@@ -1,4 +1,9 @@
 # 工业 AI SOP 智能监控系统（v2）
+<img width="1894" height="910" alt="image" src="https://github.com/user-attachments/assets/e3c89f4c-6df6-4fcd-99a8-b98f27686a58" />
+<img width="1879" height="908" alt="image" src="https://github.com/user-attachments/assets/bba57b2c-8f8d-4762-adf4-1ad77eb17008" />
+<img width="1905" height="909" alt="image" src="https://github.com/user-attachments/assets/6ac09a19-3dc5-444e-bf55-e4cf9538c4bd" />
+
+<img width="1870" height="886" alt="image" src="https://github.com/user-attachments/assets/c937bf4f-29ec-4644-8690-9775f444e0e8" />
 
 前后端分离的工业 SOP 监控与合规判定系统。前端使用 Vue 3 + TypeScript + Vite + Element Plus，后端使用 FastAPI + SQLite + WebSocket，并预留/集成了 Ultralytics YOLO 推理接口。
 
