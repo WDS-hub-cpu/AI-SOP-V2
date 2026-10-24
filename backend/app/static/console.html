@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>工业 AI SOP · 后端控制台</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a1220;
+      --panel: #0f1b2d;
+      --panel-2: #132238;
+      --border: #1e3350;
+      --border-soft: #172942;
+      --text: #e8f0fa;
+      --soft: #b9c9dd;
+      --muted: #8aa0bd;
+      --cyan: #22d3ee;
+      --blue: #38bdf8;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      background:
+        radial-gradient(1100px 600px at 12% -10%, rgba(34, 211, 238, .09), transparent 60%),
+        radial-gradient(900px 500px at 100% 0%, rgba(56, 189, 248, .06), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .mono { font-family: Consolas, "JetBrains Mono", monospace; font-variant-numeric: tabular-nums; }
+    .wrap { max-width: 1380px; margin: 0 auto; padding: 22px 26px 40px; }
+
+    header.top {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 18px; flex-wrap: wrap; padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .logo {
+      width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center;
+      background: linear-gradient(135deg, #67e8f9, #22d3ee 55%, #0ea5e9);
+      color: #04121a; font-weight: 800; letter-spacing: .04em;
+      box-shadow: 0 8px 22px rgba(34, 211, 238, .3);
+    }
+    .brand h1 { margin: 0; font-size: 19px; letter-spacing: .01em; }
+    .brand p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px;
+      border: 1px solid var(--border); border-radius: 999px;
+      background: rgba(19, 34, 56, .65); font-size: 11px; color: var(--soft); white-space: nowrap;
+    }
+    .chip i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+    .chip.ok i { background: var(--ok); box-shadow: 0 0 8px rgba(34, 197, 94, .8); }
+    .chip.warn i { background: var(--warn); box-shadow: 0 0 8px rgba(245, 158, 11, .7); }
+    .chip.danger i { background: var(--danger); box-shadow: 0 0 8px rgba(239, 68, 68, .7); }
+
+    .banner {
+      margin: 16px 0 0; padding: 11px 14px; border-radius: 9px; font-size: 12px;
+      border: 1px solid var(--border); background: rgba(19, 34, 56, .6); color: var(--soft);
+    }
+    .banner.warn { border-color: rgba(245, 158, 11, .4); background: rgba(245, 158, 11, .09); color: #fde68a; }
+    .banner.ok { border-color: rgba(34, 197, 94, .35); background: rgba(34, 197, 94, .08); color: #bbf7d0; }
+    .banner.error { border-color: rgba(239, 68, 68, .45); background: rgba(239, 68, 68, .1); color: #fecaca; }
+    .banner b { color: inherit; }
+
+    .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+    .card, .panel {
+      border: 1px solid var(--border); border-radius: 12px;
+      background: linear-gradient(180deg, rgba(19, 34, 56, .94), rgba(15, 27, 45, .96));
+      box-shadow: 0 10px 28px rgba(2, 8, 20, .35);
+    }
+    .card { padding: 14px 16px; position: relative; overflow: hidden; }
+    .card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: linear-gradient(180deg, var(--cyan), var(--blue)); }
+    .card .label { color: var(--muted); font-size: 11px; }
+    .card .value { margin-top: 7px; font-size: 24px; font-weight: 700; font-family: Consolas, monospace; }
+    .card .sub { margin-top: 5px; font-size: 10px; color: #6f88a6; }
+
+    .layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(340px, 1fr); gap: 16px; margin-top: 16px; align-items: start; }
+    .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    .panel { padding: 16px 18px; min-width: 0; }
+    .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .panel-title { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .panel-title::before { content: ""; width: 3px; height: 13px; border-radius: 2px; background: linear-gradient(180deg, #67e8f9, #0ea5e9); }
+    .panel-sub { color: var(--muted); font-size: 11px; margin-top: 2px; }
+    .tag {
+      display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px;
+      font-size: 10px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap;
+    }
+    .tag.ok { color: #86efac; border-color: rgba(34, 197, 94, .4); background: rgba(34, 197, 94, .1); }
+    .tag.warn { color: #fcd34d; border-color: rgba(245, 158, 11, .4); background: rgba(245, 158, 11, .1); }
+    .tag.danger { color: #fca5a5; border-color: rgba(239, 68, 68, .4); background: rgba(239, 68, 68, .1); }
+    .tag.sim { color: #fbbf24; border-color: rgba(251, 191, 36, .45); background: rgba(251, 191, 36, .1); letter-spacing: .1em; }
+
+    .progress-wrap { display: flex; align-items: center; gap: 12px; margin: 8px 0 14px; }
+    .progress { flex: 1; height: 7px; border-radius: 999px; background: #0a1728; overflow: hidden; border: 1px solid var(--border-soft); }
+    .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, #0ea5e9, #22d3ee); transition: width .35s ease; }
+    .progress-text { font-size: 12px; color: var(--soft); white-space: nowrap; }
+
+    .detect {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 11px 13px; border-radius: 9px; border: 1px solid var(--border-soft);
+      background: rgba(10, 21, 37, .6); margin-bottom: 14px;
+    }
+    .gesture { font-family: Consolas, monospace; font-size: 27px; font-weight: 700; color: #67e8f9; letter-spacing: .06em; }
+    .gesture small { display: block; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; font-size: 10px; font-weight: 400; color: var(--muted); letter-spacing: 0; margin-top: 1px; }
+    .detect-meta { text-align: right; font-size: 11px; color: var(--muted); }
+    .detect-meta b { display: block; color: var(--soft); font-size: 14px; font-family: Consolas, monospace; }
+
+    .steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+    .step {
+      display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px;
+      border: 1px solid var(--border-soft); background: rgba(10, 21, 37, .45);
+    }
+    .step.current { border-color: rgba(34, 211, 238, .55); background: rgba(34, 211, 238, .08); box-shadow: inset 3px 0 0 var(--cyan); }
+    .step.done { opacity: .86; }
+    .step.bad { border-color: rgba(239, 68, 68, .45); background: rgba(239, 68, 68, .06); }
+    .step .idx {
+      width: 27px; height: 27px; flex: 0 0 27px; border-radius: 7px; display: grid; place-items: center;
+      background: #122440; border: 1px solid var(--border); font-family: Consolas, monospace; font-size: 12px; color: var(--soft);
+    }
+    .step.current .idx { color: #a5f3fc; border-color: rgba(34, 211, 238, .6); background: rgba(34, 211, 238, .18); }
+    .step.done .idx { color: #86efac; border-color: rgba(34, 197, 94, .4); background: rgba(34, 197, 94, .13); }
+    .step.bad .idx { color: #fca5a5; border-color: rgba(239, 68, 68, .4); background: rgba(239, 68, 68, .13); }
+    .step .body { flex: 1; min-width: 0; }
+    .step .name { font-size: 12px; font-weight: 600; }
+    .step .desc { font-size: 10px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .step .st { font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+    .kv { display: flex; flex-direction: column; gap: 8px; }
+    .kv-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; font-size: 11px; padding-bottom: 7px; border-bottom: 1px dashed var(--border-soft); }
+    .kv-row:last-child { padding-bottom: 0; border-bottom: none; }
+    .kv-row .k { color: var(--muted); white-space: nowrap; }
+    .kv-row .v { color: var(--soft); text-align: right; word-break: break-all; }
+    .kv-row .v.small { font-size: 10px; }
+
+    .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .btn {
+      appearance: none; border: 1px solid var(--border); border-radius: 8px;
+      background: #14263f; color: var(--soft); font-size: 12px; padding: 9px 10px; cursor: pointer;
+      transition: border-color .15s ease, background .15s ease, color .15s ease;
+    }
+    .btn:hover:not(:disabled) { border-color: rgba(34, 211, 238, .55); color: #d8f7ff; background: rgba(34, 211, 238, .08); }
+    .btn.primary { background: linear-gradient(135deg, rgba(34, 211, 238, .22), rgba(14, 165, 233, .16)); border-color: rgba(34, 211, 238, .5); color: #cffafe; }
+    .btn.danger { border-color: rgba(239, 68, 68, .4); color: #fca5a5; background: rgba(239, 68, 68, .08); }
+    .btn:disabled { opacity: .38; cursor: not-allowed; }
+    .links { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; font-size: 11px; }
+    .links a { color: #7dd3fc; }
+
+    table.api { width: 100%; border-collapse: collapse; font-size: 11px; }
+    table.api th, table.api td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+    table.api th { color: var(--muted); font-weight: 600; font-size: 10px; }
+    table.api td:first-child { width: 58px; color: #7dd3fc; font-family: Consolas, monospace; }
+    table.api td:last-child { color: var(--soft); }
+
+    .errors { display: flex; flex-direction: column; gap: 7px; max-height: 230px; overflow: auto; }
+    .err { padding: 7px 9px; border-radius: 7px; background: rgba(239, 68, 68, .06); border: 1px solid rgba(239, 68, 68, .22); font-size: 10px; }
+    .err .top { display: flex; justify-content: space-between; gap: 8px; color: #fca5a5; }
+    .err p { margin: 3px 0 0; color: #d6b4b4; word-break: break-word; }
+    .empty { padding: 16px; text-align: center; color: var(--muted); font-size: 11px; border: 1px dashed var(--border); border-radius: 8px; }
+
+    footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--border); color: #5f7897; font-size: 10px; }
+    #toast {
+      position: fixed; right: 22px; bottom: 22px; z-index: 99; max-width: 360px;
+      padding: 11px 14px; border-radius: 9px; background: #12304b; border: 1px solid rgba(34, 211, 238, .45);
+      color: #d8f7ff; font-size: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+      opacity: 0; transform: translateY(8px); pointer-events: none; transition: all .2s ease;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.error { border-color: rgba(239, 68, 68, .55); background: #3a1720; color: #fecaca; }
+
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: minmax(0, 1fr); }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 620px) {
+      .wrap { padding: 16px; }
+      .cards { grid-template-columns: minmax(0, 1fr); }
+      .actions { grid-template-columns: minmax(0, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <div class="logo">SOP</div>
+        <div>
+          <h1>工业 AI SOP · 后端控制台</h1>
+          <p>由 FastAPI 自托管（端口 8000），不依赖 Vue 前端构建</p>
+        </div>
+      </div>
+      <div class="chips" id="chips"></div>
+    </header>
+
+    <div id="banner" class="banner">正在读取后端状态…</div>
+
+    <section class="cards">
+      <div class="card">
+        <div class="label">运行状态</div>
+        <div class="value" id="runtimeState">—</div>
+        <div class="sub" id="runtimeSub">—</div>
+      </div>
+      <div class="card">
+        <div class="label">当前会话</div>
+        <div class="value" id="sessionStatus">—</div>
+        <div class="sub" id="sessionSub">—</div>
+      </div>
+      <div class="card">
+        <div class="label">今日操作次数</div>
+        <div class="value" id="opsValue">—</div>
+        <div class="sub" id="opsSub">—</div>
+      </div>
+      <div class="card">
+        <div class="label">今日合规率</div>
+        <div class="value" id="rateValue">—</div>
+        <div class="sub" id="rateSub">—</div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <div class="col">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">SOP 执行状态</div>
+              <div class="panel-sub">会话、步骤与最新检测结果均来自后端状态机</div>
+            </div>
+            <span class="tag" id="sessionTag">空闲</span>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress"><div id="progressBar"></div></div>
+            <span class="progress-text mono" id="progressText">0 / 0</span>
+          </div>
+          <div class="detect">
+            <div class="gesture" id="gesture">—<small>最新识别手势</small></div>
+            <div class="detect-meta">
+              置信度<b id="confidence">0.0%</b>
+              <span id="detectTime">—</span>
+            </div>
+            <div class="detect-meta">
+              当前步骤<b id="currentStep">—</b>
+              <span id="remaining">—</span>
+            </div>
+          </div>
+          <ul class="steps" id="steps"></ul>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">最近错误日志</div>
+              <div class="panel-sub">后端内存日志缓冲（WARNING 及以上）</div>
+            </div>
+            <span class="tag" id="errorCount">0 条</span>
+          </div>
+          <div class="errors" id="errors"></div>
+        </section>
+      </div>
+
+      <div class="col">
+        <section class="panel">
+          <div class="panel-head">
+            <div class="panel-title">服务信息</div>
+            <span class="tag ok" id="backendTag">UP</span>
+          </div>
+          <div class="kv" id="backendInfo"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div class="panel-title">模型与摄像头</div>
+            <span class="tag" id="modelTag">—</span>
+          </div>
+          <div class="kv" id="modelInfo"></div>
+          <div class="kv" id="cameraInfo" style="margin-top: 10px"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">快捷控制</div>
+              <div class="panel-sub">直接调用后端 API，影响真实运行状态</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn primary" id="btnStart">开始会话</button>
+            <button class="btn danger" id="btnStop">终止会话</button>
+            <button class="btn" id="btnReload">重载模型</button>
+            <button class="btn" id="btnCamera">重连摄像头</button>
+            <button class="btn" id="btnRefresh">刷新状态</button>
+            <a class="btn" href="/docs" target="_blank" rel="noopener" style="text-align:center; line-height:1.4">打开 API 文档</a>
+          </div>
+          <div class="links">
+            <a href="/api/v1/health" target="_blank" rel="noopener">健康检查 JSON</a>
+            <a href="/openapi.json" target="_blank" rel="noopener">OpenAPI</a>
+            <a href="http://127.0.0.1:5173/" target="_blank" rel="noopener">Vue 前端页面</a>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div class="panel-title">核心 API</div>
+            <span class="tag">/api/v1</span>
+          </div>
+          <table class="api">
+            <thead><tr><th>方法</th><th>路径</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>GET</td><td>/health</td><td>健康检查</td></tr>
+              <tr><td>GET</td><td>/dashboard/summary</td><td>仪表盘聚合</td></tr>
+              <tr><td>GET</td><td>/monitor/current</td><td>监控快照</td></tr>
+              <tr><td>GET</td><td>/monitor/stream</td><td>MJPEG 视频流</td></tr>
+              <tr><td>POST</td><td>/monitor/session/start</td><td>开始会话</td></tr>
+              <tr><td>POST</td><td>/monitor/session/stop</td><td>终止会话</td></tr>
+              <tr><td>GET</td><td>/sop/steps</td><td>SOP 配置</td></tr>
+              <tr><td>GET</td><td>/events</td><td>异常记录</td></tr>
+              <tr><td>GET</td><td>/history/sessions</td><td>历史会话</td></tr>
+              <tr><td>GET</td><td>/system/status</td><td>系统状态</td></tr>
+              <tr><td>WS</td><td>/ws/monitor</td><td>实时推送</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </div>
+
+    <footer>
+      <span>工业 AI SOP v2 · 后端控制台（FastAPI 自托管）</span>
+      <span id="updatedAt">尚未刷新</span>
+    </footer>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const API = "/api/v1";
+    const $ = (id) => document.getElementById(id);
+    const state = { busy: false, timer: null };
+
+    const SESSION_LABELS = {
+      RUNNING: "执行中",
+      COMPLETED: "已完成",
+      FAILED: "判定失败",
+      ABORTED: "已终止",
+    };
+    const STEP_LABELS = {
+      PENDING: "待执行",
+      CURRENT: "执行中",
+      COMPLETED: "已完成",
+      TIMEOUT: "超时",
+      SKIPPED: "已跳过",
+    };
+    const RUNTIME_LABELS = {
+      IDLE: "待机",
+      RUNNING: "生产中",
+      DEGRADED: "降级运行",
+      DISABLED: "已禁用",
+    };
+    const MODEL_LABELS = {
+      UNLOADED: "未加载",
+      LOADING: "加载中",
+      READY: "已加载",
+      MOCK: "模拟检测器",
+      ERROR: "加载失败",
+      DISABLED: "已禁用",
+    };
+    const CAMERA_LABELS = {
+      CONNECTED: "已连接",
+      SIMULATED: "模拟画面",
+      DISCONNECTED: "信号中断",
+      OFF: "已关闭",
+      ERROR: "异常",
+    };
+
+    function esc(value) {
+      return String(value === null || value === undefined ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function formatTime(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleString("zh-CN", { hour12: false });
+    }
+
+    function formatDuration(seconds) {
+      if (seconds === null || seconds === undefined) return "—";
+      const total = Math.max(0, Math.round(seconds));
+      if (total < 60) return total + " 秒";
+      const minutes = Math.floor(total / 60);
+      if (minutes < 60) return minutes + " 分 " + (total % 60) + " 秒";
+      return Math.floor(minutes / 60) + " 小时 " + (minutes % 60) + " 分";
+    }
+
+    function formatBytes(value) {
+      if (!value) return "0 B";
+      const units = ["B", "KB", "MB", "GB"];
+      let size = value;
+      let i = 0;
+      while (size >= 1024 && i < units.length - 1) { size /= 1024; i += 1; }
+      return size.toFixed(i === 0 ? 0 : 1) + " " + units[i];
+    }
+
+    function toast(message, isError) {
+      const node = $("toast");
+      node.textContent = message;
+      node.className = isError ? "show error" : "show";
+      window.clearTimeout(node._timer);
+      node._timer = window.setTimeout(() => { node.className = ""; }, 3500);
+    }
+
+    async function api(path, options) {
+      const response = await fetch(API + path, {
+        headers: { "Content-Type": "application/json" },
+        ...(options || {}),
+      });
+      let body = null;
+      try { body = await response.json(); } catch (err) { body = null; }
+      if (!response.ok || !body || body.code !== 0) {
+        throw new Error((body && body.message) || "HTTP " + response.status);
+      }
+      return body.data;
+    }
+
+    function chip(label, cls) {
+      return '<span class="chip ' + cls + '"><i></i>' + esc(label) + "</span>";
+    }
+
+    function kvRow(key, value, small) {
+      const cls = small ? "v small mono" : "v";
+      return '<div class="kv-row"><span class="k">' + esc(key) + '</span><span class="' + cls + '">' + esc(value) + "</span></div>";
+    }
+
+    function render(sys, current, dash) {
+      const model = sys.model || {};
+      const camera = sys.camera || {};
+      const runtime = sys.runtime || {};
+      const session = current.session;
+      const detection = current.detection;
+      const running = session && session.status === "RUNNING";
+
+      const modelCls = model.status === "READY" ? "ok" : model.status === "MOCK" ? "warn" : model.status === "ERROR" ? "danger" : "warn";
+      const cameraCls = camera.status === "CONNECTED" ? "ok" : camera.status === "SIMULATED" ? "warn" : camera.status === "ERROR" ? "danger" : "warn";
+      $("chips").innerHTML =
+        chip("后端 " + (sys.backend.status || "UP"), "ok") +
+        chip("模型 " + (MODEL_LABELS[model.status] || model.status || "—"), modelCls) +
+        chip("摄像头 " + (CAMERA_LABELS[camera.status] || camera.status || "—"), cameraCls) +
+        chip("WS 客户端 " + (sys.realtime.ws_clients || 0), "ok");
+
+      const simulated = runtime.simulated || model.simulated || camera.simulated;
+      const banner = $("banner");
+      if (simulated) {
+        banner.className = "banner warn";
+        banner.innerHTML = "<b>当前为模拟模式：</b>检测结果标记为 simulated=true，不代表真实 AI 识别结果。" +
+          (model.selection_reason ? " 原因：" + esc(model.selection_reason) : "");
+      } else {
+        banner.className = "banner ok";
+        banner.innerHTML = "<b>真实模型模式：</b>检测来自 YOLO 推理，摄像头为 " + esc(camera.status) + "。";
+      }
+
+      $("runtimeState").textContent = RUNTIME_LABELS[runtime.state] || runtime.state || "—";
+      $("runtimeSub").textContent = "推理帧率 " + (runtime.measured_fps === undefined ? "—" : Number(runtime.measured_fps).toFixed(1) + " FPS") +
+        " · 运行时" + (runtime.enabled ? "启用" : "禁用");
+
+      $("sessionStatus").textContent = session ? (SESSION_LABELS[session.status] || session.status) : "空闲";
+      $("sessionSub").textContent = session
+        ? "会话 " + String(session.id).slice(0, 10) + "… · 异常 " + session.anomaly_count
+        : "等待第一个有效动作";
+
+      $("opsValue").textContent = String(dash.stats.operations);
+      $("opsSub").textContent = "已完成会话 " + dash.stats.sessions_completed + " 个 · 失败 " + dash.stats.sessions_failed + " 个";
+
+      $("rateValue").textContent = dash.stats.compliance_rate === null ? "—" : Number(dash.stats.compliance_rate).toFixed(1) + "%";
+      $("rateSub").textContent = "样本 " + dash.stats.compliance_samples + " 个已完成会话 · 待处理异常 " + dash.stats.open_anomalies;
+
+      const tag = $("sessionTag");
+      tag.textContent = session ? (SESSION_LABELS[session.status] || session.status) : "空闲";
+      tag.className = "tag " + (session ? (session.status === "COMPLETED" ? "ok" : session.status === "FAILED" ? "danger" : session.status === "RUNNING" ? "warn" : "") : "");
+
+      const total = session ? session.total_steps : current.steps.length;
+      const done = session ? session.completed_steps : 0;
+      $("progressBar").style.width = total ? Math.round((done / total) * 100) + "%" : "0%";
+      $("progressText").textContent = done + " / " + total + " 步骤" + (session && session.compliance !== null ? " · " + (session.compliance ? "合规" : "不合规") : "");
+
+      $("gesture").innerHTML = esc(detection && detection.gesture ? detection.gesture : "—") +
+        "<small>" + (detection && detection.gesture ? "最新识别手势" : "未检测到手势") + "</small>";
+      $("confidence").textContent = detection ? (Number(detection.confidence) * 100).toFixed(1) + "%" : "0.0%";
+      $("detectTime").textContent = detection ? formatTime(detection.at) : "—";
+      const step = current.current_step;
+      $("currentStep").textContent = step ? step.order + ". " + step.name : "—";
+      $("remaining").textContent = step ? "剩余 " + Number(step.remaining_seconds).toFixed(0) + " s" : "—";
+
+      $("steps").innerHTML = current.steps.map((item) => {
+        let cls = "step";
+        if (item.status === "CURRENT") cls += " current";
+        else if (item.status === "COMPLETED") cls += " done";
+        else if (item.status === "TIMEOUT" || item.status === "SKIPPED") cls += " bad";
+        const duration = item.duration_ms === null || item.duration_ms === undefined
+          ? ""
+          : '<span class="st mono">' + (item.duration_ms / 1000).toFixed(1) + "s</span>";
+        return '<li class="' + cls + '">' +
+          '<span class="idx">' + item.order + "</span>" +
+          '<div class="body"><div class="name">' + esc(item.name) + " · " + esc(item.gesture) + "</div>" +
+          '<div class="desc">' + esc(item.description || "—") + "</div></div>" +
+          '<span class="st">' + (STEP_LABELS[item.status] || item.status) + "</span>" + duration +
+          "</li>";
+      }).join("") || '<div class="empty">尚未配置 SOP 步骤</div>';
+
+      $("backendTag").textContent = sys.backend.status || "UP";
+      $("backendInfo").innerHTML =
+        kvRow("版本", "v" + sys.backend.version) +
+        kvRow("环境", sys.backend.environment) +
+        kvRow("已运行", formatDuration(sys.backend.uptime_seconds)) +
+        kvRow("进程 PID", sys.backend.pid) +
+        kvRow("Python", sys.backend.python) +
+        kvRow("数据库", sys.database.path, true) +
+        kvRow("数据库大小", formatBytes(sys.database.size_bytes)) +
+        kvRow("启动时间", formatTime(sys.backend.started_at));
+
+      $("modelTag").textContent = MODEL_LABELS[model.status] || model.status || "—";
+      $("modelTag").className = "tag " + modelCls;
+      $("modelInfo").innerHTML =
+        kvRow("检测器", model.name) +
+        kvRow("数据来源", model.simulated ? "模拟检测（非真实 AI）" : "真实 YOLO 推理") +
+        kvRow("模型状态", MODEL_LABELS[model.status] || model.status) +
+        kvRow("推理设备", model.device || "—") +
+        kvRow("权重文件", model.model_path || "—", true) +
+        kvRow("类别数量", model.class_count === undefined ? "—" : model.class_count);
+
+      $("cameraInfo").innerHTML =
+        kvRow("摄像头状态", CAMERA_LABELS[camera.status] || camera.status) +
+        kvRow("画面来源", camera.source || "—") +
+        kvRow("分辨率", camera.resolution || "—") +
+        kvRow("采集帧率", (camera.measured_fps === undefined ? "—" : Number(camera.measured_fps).toFixed(1)) + " / " + (camera.target_fps || "—") + " FPS") +
+        kvRow("设备提示", camera.message || "—", true) +
+        kvRow("最后帧", formatTime(camera.last_frame_at));
+
+      const errors = sys.recent_errors || [];
+      $("errorCount").textContent = errors.length + " 条";
+      $("errors").innerHTML = errors.length
+        ? errors.map((item) =>
+            '<div class="err"><div class="top"><span class="mono">' + esc(item.level) + " · " + esc(item.logger) + "</span>" +
+            "<span>" + esc(formatTime(item.time)) + "</span></div><p>" + esc(item.message) + "</p></div>"
+          ).join("")
+        : '<div class="empty">暂无错误日志</div>';
+
+      $("btnStart").disabled = state.busy || Boolean(running);
+      $("btnStop").disabled = state.busy || !running;
+      $("btnReload").disabled = state.busy;
+      $("btnCamera").disabled = state.busy;
+      $("btnRefresh").disabled = state.busy;
+      $("updatedAt").textContent = "最后更新：" + formatTime(current.updated_at) + " · 每 3 秒自动刷新";
+    }
+
+    async function refresh() {
+      try {
+        const values = await Promise.all([
+          api("/system/status"),
+          api("/monitor/current"),
+          api("/dashboard/summary"),
+        ]);
+        render(values[0], values[1], values[2]);
+      } catch (err) {
+        const banner = $("banner");
+        banner.className = "banner error";
+        banner.innerHTML = "<b>后端接口读取失败：</b>" + esc(err.message);
+        $("updatedAt").textContent = "读取失败：" + new Date().toLocaleString("zh-CN", { hour12: false });
+      }
+    }
+
+    async function runAction(action, confirmText) {
+      if (confirmText && !window.confirm(confirmText)) return;
+      state.busy = true;
+      $("btnRefresh").disabled = true;
+      try {
+        await action();
+        toast("操作成功");
+        await refresh();
+      } catch (err) {
+        toast(err.message, true);
+      } finally {
+        state.busy = false;
+        await refresh();
+      }
+    }
+
+    $("btnStart").addEventListener("click", () => runAction(
+      () => api("/monitor/session/start", { method: "POST" })
+    ));
+    $("btnStop").addEventListener("click", () => runAction(
+      () => api("/monitor/session/stop", {
+        method: "POST",
+        body: JSON.stringify({ reason: "后端控制台手动终止" }),
+      }),
+      "终止后当前会话会被判定为「已终止」，是否继续？"
+    ));
+    $("btnReload").addEventListener("click", () => runAction(
+      () => api("/system/model/reload", { method: "POST" }),
+      "重新加载模型会短暂中断检测，是否继续？"
+    ));
+    $("btnCamera").addEventListener("click", () => runAction(
+      () => api("/system/camera/reconnect", { method: "POST" })
+    ));
+    $("btnRefresh").addEventListener("click", () => refresh());
+
+    refresh();
+    state.timer = window.setInterval(refresh, 3000);
+    window.addEventListener("beforeunload", () => window.clearInterval(state.timer));
+  </script>
+</body>
+</html>

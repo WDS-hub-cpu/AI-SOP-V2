@@ -1,0 +1,20 @@
+{
+  "_comment": "YOLO 类别名 -> SOP 手势。请按实际训练输出的类别名修改，未列出的类别会被忽略。",
+  "classes": {
+    "one": "ONE",
+    "two": "TWO",
+    "three": "THREE",
+    "four": "FOUR",
+    "five": "FIVE",
+    "1": "ONE",
+    "2": "TWO",
+    "3": "THREE",
+    "4": "FOUR",
+    "5": "FIVE",
+    "gesture_one": "ONE",
+    "gesture_two": "TWO",
+    "gesture_three": "THREE",
+    "gesture_four": "FOUR",
+    "gesture_five": "FIVE"
+  }
+}
